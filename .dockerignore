@@ -1,0 +1,11 @@
+# Target the root of the project
+target/
+backend/target/
+frontend/node_modules/
+frontend/dist/
+.git/
+.gitignore
+*.db
+*.db-journal
+.env
+.DS_Store

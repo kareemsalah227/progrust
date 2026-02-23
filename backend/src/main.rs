@@ -263,10 +263,14 @@ async fn main() -> anyhow::Result<()> {
         .with_state(pool);
 
     // Serve the React build. Falls back to index.html for client-side routing.
-    let frontend_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .unwrap()
-        .join("frontend/dist");
+    let frontend_dir = std::env::var("FRONTEND_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| {
+            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .parent()
+                .unwrap()
+                .join("frontend/dist")
+        });
 
     let serve_dir = ServeDir::new(&frontend_dir).not_found_service(
         tower_http::services::ServeFile::new(frontend_dir.join("index.html")),

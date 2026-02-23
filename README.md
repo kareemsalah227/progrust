@@ -72,8 +72,33 @@ The server starts on `http://0.0.0.0:3000`.
 
 ---
 
+## Docker Deployment (Recommended for Synology NAS)
+
+### 1. Build & Run locally with Compose
+```bash
+docker-compose up --build -d
+```
+This will build the image and start the container in the background. Your data will be persisted in the `./data` folder.
+
+### 2. Deploying to Synology NAS
+1.  **Preparation**: Copy the project folder to your NAS (e.g., via SMB or File Station).
+2.  **Container Manager**:
+    *   Open the **Container Manager** app on Synology.
+    *   Go to **Project** -> **Create**.
+    *   Select the folder containing `docker-compose.yml`.
+    *   Give it a name and follow the wizard.
+3.  **Data Persistence**: Ensure the `./data` directory exists. This is where your SQLite database will live.
+
+### 3. Secure Remote Access (Tailscale)
+To access your tracker securely from anywhere without opening ports:
+1.  **Install Tailscale**: Download the Tailscale app on your Synology NAS from the Package Center.
+2.  **Connect Devices**: Install Tailscale on your iPhone/iPad/Mac.
+3.  **Access**: Use the Synology's Tailscale IP (e.g., `http://100.x.y.z:3000`) or its MagicDNS name to access the tracker from anywhere as if you were home.
+
+---
+
 ## Future Expansion
 The system is built for expandability:
-- **Remote Access**: Ready for Cloudflare Tunneling.
+- **Remote Access**: Ready for **Tailscale** (Zero-Config VPN).
 - **Postgres**: Swapping SQLite for Postgres is trivial via `sqlx`.
 - **AI Agent**: The structured `/api/stats` endpoint is ready for LLM integration.
