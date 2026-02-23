@@ -1,6 +1,34 @@
-# German Learning Tracker
+# German Learning Tracker 🇩🇪
 
-A self-hosted hour tracking system for learning German. Log study sessions with a single tap, and visualize your progress toward B1+ and B2 completion goals.
+A self-hosted, premium hour-tracking system designed to quantize your learning progress toward B1+ and B2 levels without demotivating gamification. Built with a Rust backend and a React (PWA) frontend.
+
+## Features
+
+### 🕒 Effortless Logging
+- **One-tap Start/Stop**: No manual math or time recording.
+- **Level Selection**: Choose between B1+ and B2 on every start.
+- **Verification Step**: Confirm or discard a session after finishing to ensure data accuracy.
+- **Auto-rounding**: Displays rounded minutes to keep focus on progress, not seconds.
+
+### 📊 Progress Visualization
+- **Goal Bars**: Three horizontal bars showing progress toward B1+ (200h), B2 (320h), and Combined (520h).
+- **Remaining Hours**: Explicit indicators for exactly how many hours are left to reach each goal.
+- **Daily Activity**: Bar charts showing hours put in per day for each level.
+
+### 🏠 Local Network Ready
+- **PWA Support**: Installable on iPhone/iPad Home Screen via Safari.
+- **Single Binary**: The Rust server hosts both the API and the frontend.
+- **SQLite Storage**: Data is stored locally in `backend/german_tracker.db`.
+
+---
+
+## Technical Stack
+
+- **Backend**: Rust (Axum, sqlx, Tokio)
+- **Frontend**: React, Vite, Recharts, Tailwind CSS, TanStack Query
+- **Database**: SQLite (managed by sqlx migrations)
+
+---
 
 ## Project Structure
 
@@ -15,70 +43,37 @@ progrust/
     │   ├── App.tsx
     │   ├── api.ts
     │   └── components/
-    │       ├── SessionTracker.tsx
-    │       └── ProgressDashboard.tsx
     └── package.json
 ```
 
-## Running Locally
+---
 
-### Prerequisites
-- [Rust](https://rustup.rs/) (stable)
-- [Node.js](https://nodejs.org/) 18+
+## Getting Started
 
 ### 1. Build the Frontend
-
 ```bash
 cd frontend
 npm install
 npm run build
 ```
 
-### 2. Start the Backend
-
+### 2. Run the Server
 ```bash
-cd backend
+cd ../backend
 cargo run
 ```
 
 The server starts on `http://0.0.0.0:3000`.
 
-- From this Mac: `http://localhost:3000`
-- From iPad/iPhone on the same WiFi: `http://<your-mac-ip>:3000`
+### 3. Access on your devices
+- **Mac**: [http://localhost:3000](http://localhost:3000)
+- **iPhone/iPad**: `http://<YOUR_MAC_IP>:3000`
+- **Pro Tip**: On iOS/Android, use "Add to Home Screen" to use it like a native app.
 
-> Find your local IP: `ipconfig getifaddr en0`
+---
 
-### Development Mode (hot reload)
-
-You can run the frontend dev server and backend simultaneously:
-
-```bash
-# Terminal 1
-cd backend && cargo run
-
-# Terminal 2
-cd frontend && npm run dev
-```
-
-The Vite dev server proxies `/api` requests to `localhost:3000`.
-
-## API Reference
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/api/sessions/start` | Start a session (`{"level": "B1_PLUS"\|"B2"}`) |
-| `POST` | `/api/sessions/stop/:id` | Stop session, returns duration in minutes |
-| `DELETE` | `/api/sessions/:id` | Discard a session |
-| `GET` | `/api/stats` | Aggregated hours per level |
-
-## Goals
-
-| Level | Target Hours |
-|---|---|
-| B1+ | 200 h |
-| B2 | 320 h |
-| Combined | 520 h |
-
-## Database
-
-SQLite file created automatically at `backend/german_tracker.db` on first run. Back it up by copying this file to your NAS.
+## Future Expansion
+The system is built for expandability:
+- **Remote Access**: Ready for Cloudflare Tunneling.
+- **Postgres**: Swapping SQLite for Postgres is trivial via `sqlx`.
+- **AI Agent**: The structured `/api/stats` endpoint is ready for LLM integration.

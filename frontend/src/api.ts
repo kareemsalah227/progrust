@@ -12,12 +12,19 @@ export interface StopSessionResponse {
     duration_minutes: number;
 }
 
+export interface DailyStat {
+    date: string;
+    hours: number;
+}
+
 export interface StatsResponse {
     b1_plus_hours: number;
     b2_hours: number;
     total_hours: number;
     b1_plus_goal_hours: number;
     b2_goal_hours: number;
+    daily_b1_plus: DailyStat[];
+    daily_b2: DailyStat[];
 }
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {

@@ -32,12 +32,20 @@ struct StopSessionResponse {
 }
 
 #[derive(Debug, Serialize)]
+struct DailyStat {
+    date: String,
+    hours: f64,
+}
+
+#[derive(Debug, Serialize)]
 struct StatsResponse {
     b1_plus_hours: f64,
     b2_hours: f64,
     total_hours: f64,
     b1_plus_goal_hours: f64,
     b2_goal_hours: f64,
+    daily_b1_plus: Vec<DailyStat>,
+    daily_b2: Vec<DailyStat>,
 }
 
 // ---------------------------------------------------------------------------
@@ -178,7 +186,36 @@ async fn get_stats(State(pool): State<SqlitePool>) -> impl IntoResponse {
         }
     }
 
+    // Daily aggregation
+    let daily_rows = sqlx::query(
+        "SELECT level, date(started_at) as session_date, CAST(SUM(duration_s) AS INTEGER) as daily_s \
+         FROM sessions WHERE duration_s IS NOT NULL GROUP BY level, session_date \
+         ORDER BY session_date ASC",
+    )
+    .fetch_all(&pool)
+    .await
+    .expect("DB error");
+
+    let mut daily_b1_plus = Vec::new();
+    let mut daily_b2 = Vec::new();
+
     let to_hours = |s: f64| -> f64 { (s / 3600.0 * 100.0).round() / 100.0 };
+
+    for row in daily_rows {
+        let level: String = row.get("level");
+        let date: String = row.get("session_date");
+        let daily_s: i64 = row.try_get("daily_s").unwrap_or(0);
+        let stat = DailyStat {
+            date,
+            hours: to_hours(daily_s as f64),
+        };
+
+        match level.as_str() {
+            "B1_PLUS" => daily_b1_plus.push(stat),
+            "B2" => daily_b2.push(stat),
+            _ => {}
+        }
+    }
 
     Json(StatsResponse {
         b1_plus_hours: to_hours(b1_plus_s),
@@ -186,6 +223,8 @@ async fn get_stats(State(pool): State<SqlitePool>) -> impl IntoResponse {
         total_hours: to_hours(b1_plus_s + b2_s),
         b1_plus_goal_hours: 200.0,
         b2_goal_hours: 320.0,
+        daily_b1_plus,
+        daily_b2,
     })
     .into_response()
 }

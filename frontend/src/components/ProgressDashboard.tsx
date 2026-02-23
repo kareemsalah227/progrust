@@ -1,4 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
+import {
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+} from 'recharts';
 import { api } from '../api';
 import type { StatsResponse } from '../api';
 
@@ -21,11 +30,6 @@ function ProgressBar({ label, hours, goalHours, color }: ProgressBarProps) {
                     <span style={{ color: 'var(--text)', fontWeight: 600 }}>{hours.toFixed(1)}h</span>
                     {' / '}
                     {goalHours}h
-                    {remaining > 0 && (
-                        <span style={{ color: 'var(--text-muted)', marginLeft: 8 }}>
-                            ({remaining.toFixed(1)}h left)
-                        </span>
-                    )}
                 </span>
             </div>
             <div style={{
@@ -45,8 +49,97 @@ function ProgressBar({ label, hours, goalHours, color }: ProgressBarProps) {
                     }}
                 />
             </div>
-            <div style={{ marginTop: 6, textAlign: 'right', fontSize: 12, color: 'var(--text-muted)' }}>
-                {pct.toFixed(1)}% complete
+            <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                marginTop: 6,
+                fontSize: 12,
+                color: 'var(--text-muted)',
+            }}>
+                <span>{pct.toFixed(1)}% complete</span>
+                {remaining > 0 ? (
+                    <span style={{ fontWeight: 500, color: 'var(--text)' }}>
+                        {remaining.toFixed(1)}h remaining
+                    </span>
+                ) : (
+                    <span style={{ fontWeight: 600, color: 'var(--success)' }}>Goal reached! 🎉</span>
+                )}
+            </div>
+        </div>
+    );
+}
+
+interface DailyChartProps {
+    title: string;
+    data: { date: string; hours: number }[];
+    color: string;
+}
+
+function DailyChart({ title, data, color }: DailyChartProps) {
+    if (data.length === 0) {
+        return (
+            <div style={{
+                height: 200,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'var(--surface-2)',
+                borderRadius: 12,
+                marginBottom: 32,
+                color: 'var(--text-muted)',
+                fontSize: 14,
+            }}>
+                No data for {title} yet.
+            </div>
+        );
+    }
+
+    return (
+        <div style={{ marginBottom: 32 }}>
+            <h3 style={{
+                fontSize: 14,
+                fontWeight: 600,
+                color: 'var(--text)',
+                marginBottom: 16,
+            }}>
+                {title}
+            </h3>
+            <div style={{ height: 200, width: '100%' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={data}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                        <XAxis
+                            dataKey="date"
+                            stroke="var(--text-muted)"
+                            fontSize={11}
+                            tickLine={false}
+                            axisLine={false}
+                            tickFormatter={(str) => str.split('-').slice(1).join('/')} // Format MM/DD
+                        />
+                        <YAxis
+                            stroke="var(--text-muted)"
+                            fontSize={11}
+                            tickLine={false}
+                            axisLine={false}
+                            unit="h"
+                        />
+                        <Tooltip
+                            contentStyle={{
+                                background: 'var(--surface)',
+                                border: '1px solid var(--border)',
+                                borderRadius: 8,
+                                fontSize: 12,
+                            }}
+                            cursor={{ fill: 'var(--surface-2)' }}
+                        />
+                        <Bar
+                            dataKey="hours"
+                            fill={color}
+                            radius={[4, 4, 0, 0]}
+                            animationDuration={1000}
+                        />
+                    </BarChart>
+                </ResponsiveContainer>
             </div>
         </div>
     );
@@ -93,7 +186,7 @@ export function ProgressDashboard() {
                 color: 'var(--text-muted)',
                 marginBottom: 24,
             }}>
-                Progress
+                Cumulative Progress
             </h2>
 
             {isLoading && <StatsPlaceholder />}
@@ -102,6 +195,7 @@ export function ProgressDashboard() {
                     Could not load stats. Is the backend running?
                 </p>
             )}
+
             {stats && (
                 <>
                     <ProgressBar
@@ -121,6 +215,31 @@ export function ProgressDashboard() {
                         hours={stats.total_hours}
                         goalHours={stats.b1_plus_goal_hours + stats.b2_goal_hours}
                         color="#4ade80"
+                    />
+
+                    <hr style={{ border: 'none', borderTop: '1px solid var(--border)', margin: '32px 0' }} />
+
+                    <h2 style={{
+                        fontSize: 13,
+                        fontWeight: 600,
+                        letterSpacing: '0.1em',
+                        textTransform: 'uppercase',
+                        color: 'var(--text-muted)',
+                        marginBottom: 24,
+                    }}>
+                        Daily Activity
+                    </h2>
+
+                    <DailyChart
+                        title="Daily B1+ Activity"
+                        data={stats.daily_b1_plus}
+                        color="#6c8aff"
+                    />
+
+                    <DailyChart
+                        title="Daily B2 Activity"
+                        data={stats.daily_b2}
+                        color="#a78bfa"
                     />
                 </>
             )}

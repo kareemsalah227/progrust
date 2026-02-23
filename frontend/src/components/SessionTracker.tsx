@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api';
 import type { Level } from '../api';
@@ -7,10 +7,28 @@ type Phase = 'idle' | 'choosing-level' | 'running' | 'confirming';
 
 export function SessionTracker() {
     const queryClient = useQueryClient();
-    const [phase, setPhase] = useState<Phase>('idle');
-    const [sessionId, setSessionId] = useState<string | null>(null);
+
+    // Use lazy initializer to restore from localStorage
+    const [phase, setPhase] = useState<Phase>(() => {
+        return (localStorage.getItem('gt_phase') as Phase) || 'idle';
+    });
+    const [sessionId, setSessionId] = useState<string | null>(() => {
+        return localStorage.getItem('gt_session_id');
+    });
+    const [chosenLevel, setChosenLevel] = useState<Level | null>(() => {
+        return localStorage.getItem('gt_level') as Level;
+    });
     const [durationMinutes, setDurationMinutes] = useState<number>(0);
-    const [chosenLevel, setChosenLevel] = useState<Level | null>(null);
+
+    // Sync state to localStorage
+    useEffect(() => {
+        localStorage.setItem('gt_phase', phase);
+        if (sessionId) localStorage.setItem('gt_session_id', sessionId);
+        else localStorage.removeItem('gt_session_id');
+
+        if (chosenLevel) localStorage.setItem('gt_level', chosenLevel);
+        else localStorage.removeItem('gt_level');
+    }, [phase, sessionId, chosenLevel]);
 
     const startMutation = useMutation({
         mutationFn: (level: Level) => api.startSession(level),
@@ -44,6 +62,9 @@ export function SessionTracker() {
     });
 
     function reset() {
+        localStorage.removeItem('gt_phase');
+        localStorage.removeItem('gt_session_id');
+        localStorage.removeItem('gt_level');
         setPhase('idle');
         setSessionId(null);
         setDurationMinutes(0);
