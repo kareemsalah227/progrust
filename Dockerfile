@@ -7,7 +7,7 @@ RUN npm install
 RUN npm run build
 
 # --- Stage 2: Backend Build ---
-FROM rust:1.82-slim AS backend-builder
+FROM rust:1.85-slim AS backend-builder
 WORKDIR /app
 
 # Install build dependencies for SQLite

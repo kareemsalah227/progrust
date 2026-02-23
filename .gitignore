@@ -22,3 +22,5 @@ target
 
 # SQLite database
 **/*.db
+
+.DS_Store
